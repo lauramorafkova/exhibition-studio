@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Exhibition Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: gallery-wall workspace — stage rail | work table | living plan sheet (wall-label typography) */
+:root{
+  --wall:#eef0f2; --paper:#fbfcfd; --ink:#16181d; --muted:#5d6370; --line:#d5d9df; --soft:#e3e6ea;
+  --accent:#2337c6; --accent-ink:#ffffff;
+  --cur:#2337c6; --cur-bg:#e6e9fb;
+  --mkt:#a85f00; --mkt-bg:#fbefdc;
+  --des:#a3266c; --des-bg:#f8e4ef;
+  --ok:#1f7a4d; --ok-bg:#e1f2e8; --warn:#9a5b00;
+  --display:"Instrument Serif", Georgia, "Times New Roman", serif;
+  --body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --wall:#121419; --paper:#1a1d24; --ink:#e9ebef; --muted:#9aa1ad; --line:#2f343e; --soft:#242832;
+  --accent:#8794ff; --accent-ink:#0d1030;
+  --cur:#97a2ff; --cur-bg:#232a52; --mkt:#f0b45a; --mkt-bg:#3a2b14; --des:#f08cc2; --des-bg:#3d1b2e;
+  --ok:#6cd39c; --ok-bg:#16352a; --warn:#f0b45a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --wall:#121419; --paper:#1a1d24; --ink:#e9ebef; --muted:#9aa1ad; --line:#2f343e; --soft:#242832;
+  --accent:#8794ff; --accent-ink:#0d1030;
+  --cur:#97a2ff; --cur-bg:#232a52; --mkt:#f0b45a; --mkt-bg:#3a2b14; --des:#f08cc2; --des-bg:#3d1b2e;
+  --ok:#6cd39c; --ok-bg:#16352a; --warn:#f0b45a; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--wall);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+h1,h2,h3{text-wrap:balance;margin:0}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase}
+.wrap{max-width:1380px;margin:0 auto;display:grid;gap:18px}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;border-bottom:1px solid var(--line);padding-bottom:16px}
+.top .eyebrow{color:var(--muted)}
+.top h1{font-family:var(--display);font-weight:400;font-size:clamp(30px,4.4vw,48px);line-height:1.02;margin-top:4px}
+.top h1 em{color:var(--accent)}
+.prog{min-width:min(340px,100%);display:grid;gap:6px}
+.prog-row{display:flex;justify-content:space-between;gap:8px;color:var(--muted)}
+.bar{height:8px;background:var(--soft);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s}
+.sync{display:inline-flex;align-items:center;gap:6px}
+.sync::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.sync.on::before{background:var(--ok)}
+
+/* tabs (narrow) */
+.tabs{display:none;gap:6px}
+.tabs button{flex:1;padding:9px;border:1px solid var(--line);background:var(--paper);border-radius:6px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--wall);border-color:var(--ink)}
+
+.grid{display:grid;grid-template-columns:230px minmax(0,1fr) minmax(0,400px);gap:22px;align-items:start}
+
+/* stage rail */
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);display:grid;gap:2px}
+.rail button{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:8px;text-align:left;padding:9px 10px;border:0;background:transparent;border-radius:6px;cursor:pointer;color:var(--muted)}
+.rail button:hover{background:var(--soft);color:var(--ink)}
+.rail button[aria-current="step"]{background:var(--paper);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+.rail .n{font-family:var(--mono);font-size:12px}
+.rail .t{font-weight:500;font-size:14px;line-height:1.25}
+.dot{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--line)}
+.dot.started{border-color:var(--accent);background:linear-gradient(90deg,var(--accent) 50%,transparent 50%)}
+.dot.done{border-color:var(--ok);background:var(--ok)}
+.rail .roles{display:flex;gap:3px;grid-column:2/4;margin-top:-2px}
+.rtag{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;padding:1px 5px;border-radius:3px}
+.rtag.cur{background:var(--cur-bg);color:var(--cur)}.rtag.mkt{background:var(--mkt-bg);color:var(--mkt)}.rtag.des{background:var(--des-bg);color:var(--des)}
+
+/* work */
+.work{display:grid;gap:18px;min-width:0}
+.stage-head{display:grid;gap:6px}
+.stage-head .mono{color:var(--accent)}
+.stage-head h2{font-family:var(--display);font-weight:400;font-size:clamp(28px,3.4vw,38px);line-height:1.05}
+.stage-head p{margin:0;color:var(--muted);max-width:62ch}
+
+.lenses{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.lens{border-radius:8px;padding:12px 13px;display:grid;gap:6px;align-content:start;border:1px solid transparent}
+.lens.cur{background:var(--cur-bg)}.lens.mkt{background:var(--mkt-bg)}.lens.des{background:var(--des-bg)}
+.lens .who{display:flex;justify-content:space-between;gap:6px;align-items:center}
+.lens.cur .who{color:var(--cur)}.lens.mkt .who{color:var(--mkt)}.lens.des .who{color:var(--des)}
+.lens p{margin:0;font-size:13.5px;line-height:1.5}
+.lens .job{font-size:12.5px;color:var(--muted)}
+.ask{justify-self:start;border:1px solid currentColor;background:transparent;border-radius:999px;padding:3px 10px;font-size:12.5px;cursor:pointer}
+.lens.cur .ask{color:var(--cur)}.lens.mkt .ask{color:var(--mkt)}.lens.des .ask{color:var(--des)}
+.ask:disabled{opacity:.5;cursor:wait}
+.answer{font-size:13.5px;white-space:pre-wrap;background:var(--paper);border-radius:6px;padding:9px 10px;border:1px solid var(--line)}
+
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:18px}
+.field{display:grid;gap:6px}
+.field label,.field .lbl{font-weight:600;font-size:14px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.field .req{font-family:var(--mono);font-size:10.5px;color:var(--warn);letter-spacing:.05em;text-transform:uppercase}
+.field .hint{font-size:13px;color:var(--muted);margin:0}
+input[type=text],input[type=number],textarea,select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:6px;background:var(--wall)}
+textarea{min-height:84px;resize:vertical}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);outline:none;background:var(--paper)}
+.count{font-family:var(--mono);font-size:11px;color:var(--muted);justify-self:end}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--wall);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13.5px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--wall);border-color:var(--ink)}
+.owner{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;padding:1px 5px;border-radius:3px;font-weight:400}
+
+.list{display:grid;gap:8px}
+.row{display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));align-items:start;padding:10px;border:1px dashed var(--line);border-radius:8px;position:relative}
+.row .cat{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center}
+.row .cat span{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.05em}
+.x{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:4px}
+.x:hover{background:var(--soft);color:var(--ink)}
+.row .wide{grid-column:1/-1}
+.add{justify-self:start;border:1px dashed var(--accent);color:var(--accent);background:transparent;border-radius:6px;padding:6px 12px;cursor:pointer}
+.swatches{display:flex;gap:14px;flex-wrap:wrap}
+.swatches label{display:grid;gap:4px;font-weight:400;font-size:12.5px;color:var(--muted)}
+input[type=color]{width:64px;height:44px;border:1px solid var(--line);border-radius:6px;padding:2px;background:var(--paper);cursor:pointer}
+
+.poster{aspect-ratio:3/4;max-width:220px;width:100%;border-radius:4px;padding:16px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;box-shadow:0 1px 0 var(--line),0 8px 24px rgba(0,0,0,.12)}
+.poster .p-title{font-size:26px;line-height:1;word-break:break-word}
+.poster .p-sub{font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+
+.stage-foot{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding-top:14px}
+.btn{border:0;background:var(--accent);color:var(--accent-ink);padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:disabled{background:var(--soft);color:var(--muted);cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:500}
+.missing{font-size:13px;color:var(--muted)}
+.enjoy{display:grid;gap:8px;background:var(--wall);border-radius:8px;padding:12px}
+.enjoy .chips .chip.cur[aria-pressed="true"]{background:var(--cur);border-color:var(--cur);color:var(--paper)}
+.enjoy .chips .chip.mkt[aria-pressed="true"]{background:var(--mkt);border-color:var(--mkt);color:var(--paper)}
+.enjoy .chips .chip.des[aria-pressed="true"]{background:var(--des);border-color:var(--des);color:var(--paper)}
+details.mentor{border-top:1px solid var(--line);padding-top:12px}
+details.mentor summary{cursor:pointer;color:var(--muted);font-size:13.5px}
+details.mentor textarea{margin-top:8px}
+
+/* plan sheet */
+.sheet{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100vh - 24px);overflow:auto;background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:22px 20px;display:grid;gap:16px;min-width:0}
+.sheet-head{display:grid;gap:4px;border-bottom:2px solid var(--ink);padding-bottom:12px}
+.sheet-head h3{font-family:var(--display);font-weight:400;font-size:28px;line-height:1.05}
+.sheet-head .sub{font-style:italic;font-family:var(--display);font-size:17px;color:var(--muted)}
+.status{background:var(--wall);border-radius:6px;padding:12px;display:grid;gap:6px;font-size:13.5px}
+.status strong{font-weight:600}
+.status ul{margin:0;padding-left:18px}
+.sec{display:grid;gap:6px;border-top:1px solid var(--line);padding-top:12px}
+.sec-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sec-h .mono{color:var(--muted)}
+.badge{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:3px;background:var(--soft);color:var(--muted)}
+.badge.done{background:var(--ok-bg);color:var(--ok)}
+.badge.prog{background:var(--cur-bg);color:var(--cur)}
+.kv{display:grid;grid-template-columns:110px minmax(0,1fr);gap:2px 10px;font-size:13.5px}
+.kv dt{color:var(--muted);font-size:12.5px}
+.kv dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.kv dd.empty{color:var(--muted);font-style:italic}
+.mini{width:100%;border-collapse:collapse;font-size:12.5px}
+.mini td,.mini th{text-align:left;padding:4px 6px 4px 0;border-bottom:1px solid var(--soft);vertical-align:top}
+.mini th{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:400}
+.num{font-variant-numeric:tabular-nums;text-align:right}
+.meter{display:grid;gap:6px}
+.meter-row{display:grid;grid-template-columns:120px 1fr 24px;gap:8px;align-items:center;font-size:13px}
+.meter-row .track{height:8px;border-radius:4px;background:var(--soft);overflow:hidden}
+.meter-row .track i{display:block;height:100%}
+.copyrow{display:flex;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--wall);padding:8px 14px;border-radius:6px;font-size:13.5px;z-index:20}
+.reset-confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
+
+@media (max-width:1100px){
+  .grid{grid-template-columns:200px minmax(0,1fr)}
+  .sheet{grid-column:1/-1;position:static;max-height:none}
+}
+@media (max-width:760px){
+  .tabs{display:flex}
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .rail{position:static;display:flex;overflow-x:auto;gap:4px;padding-bottom:4px}
+  .rail button{grid-template-columns:auto auto;flex:0 0 auto}
+  .rail .t,.rail .roles{display:none}
+  .lenses{grid-template-columns:minmax(0,1fr)}
+  body[data-view="work"] .sheet{display:none}
+  body[data-view="sheet"] .work,body[data-view="sheet"] .rail{display:none}
+  .kv{grid-template-columns:minmax(0,1fr)}
+  .kv dt{margin-top:6px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="mono eyebrow">Exhibition Studio · Fictional exhibition plan</div>
+      <h1 id="hTitle">Your exhibition, <em>untitled</em></h1>
+    </div>
+    <div class="prog">
+      <div class="prog-row mono"><span id="progTxt">0 of 9 stages complete</span><span class="sync" id="sync">Saved on this device</span></div>
+      <div class="bar" role="progressbar" aria-label="Plan progress" aria-valuemin="0" aria-valuemax="100" id="progBar"><i id="progFill"></i></div>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tabWork" aria-selected="true">Work on stage</button>
+    <button role="tab" id="tabSheet" aria-selected="false">Plan sheet</button>
+  </div>
+
+  <div class="grid">
+    <nav class="rail" id="rail" aria-label="Planning stages"></nav>
+    <main class="work" id="work"></main>
+    <aside class="sheet" id="sheet" aria-label="Plan sheet"></aside>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+"use strict";
+const ROLES = {
+  cur:{name:"Curator", job:"Researches the subject, chooses the works, writes the story and the wall texts."},
+  mkt:{name:"Marketing specialist", job:"Finds the audience, shapes the message, and gets people through the door."},
+  des:{name:"Graphic designer", job:"Builds the visual identity: poster, signage, colours, type and wayfinding."}
+};
+
+const STAGES = [
+ {id:"theme", name:"Find your theme", roles:["cur","mkt","des"],
+  intro:"Every exhibition starts with something you care about. Collect ideas, turn one into a question, then give it a working title.",
+  lens:{cur:"A curator starts from a question, not a topic. “Plastic” is a topic; “Can trash become treasure?” is a question a visitor can walk through.",
+        mkt:"Read your title as a stranger scrolling past. Would it make you stop? Short, curious and a little surprising works best.",
+        des:"Close your eyes: what colours, textures and shapes does this theme suggest? That's your first design brief."},
+  fields:[
+   {k:"interests",t:"area",label:"Three things you can't stop thinking about",hint:"Hobbies, issues, places, artists, memories. Anything goes.",ph:"e.g. old photographs of my grandmother's town · ocean pollution · street fashion"},
+   {k:"question",t:"text",label:"The question your exhibition asks",owner:"cur",ph:"e.g. What do the clothes we wear say about who we want to be?"},
+   {k:"theme",t:"area",label:"Theme statement",req:1,owner:"cur",hint:"One or two sentences: what is it about and why does it matter now?"},
+   {k:"title",t:"text",label:"Working title",req:1,owner:"mkt",ph:"e.g. Second Skin"},
+   {k:"subtitle",t:"text",label:"Subtitle",owner:"mkt",ph:"e.g. Fashion, identity and the stories we wear"}
+  ]},
+ {id:"audience", name:"Audience & venue", roles:["mkt","cur"],
+  intro:"Who is this for, and where will it happen? These choices shape every decision after this.",
+  lens:{cur:"Curators write for a specific visitor. Picture one person walking in: how old are they, what do they already know?",
+        mkt:"Marketers call this the target audience. You can't speak to everyone, so choose who you most want to reach.",
+        des:"The venue decides your canvas: a white gallery wall, a shop window, a phone screen. Design changes with each."},
+  fields:[
+   {k:"audience",t:"chips",multi:1,req:1,owner:"mkt",label:"Main audience",opts:["Teenagers","Families with kids","University students","Art lovers","Local community","Tourists","Professionals"]},
+   {k:"audienceNote",t:"area",label:"Describe one typical visitor",owner:"mkt",ph:"e.g. Mia, 16, follows fashion on TikTok, has never been to a museum on her own…"},
+   {k:"takeaway",t:"area",label:"What should visitors feel or know when they leave?",req:1,owner:"cur"},
+   {k:"venue",t:"chips",req:1,label:"Venue type",opts:["Museum gallery","Pop-up space","Online / virtual","School hall","Outdoor / public space","Library"]},
+   {k:"venueName",t:"text",label:"Imagined venue and city",ph:"e.g. Ground-floor gallery, Helsinki Design Museum"},
+   {k:"dates",t:"text",label:"Dates and length of run",ph:"e.g. 6 March – 31 May 2027 (12 weeks)"}
+  ]},
+ {id:"story", name:"Story & sections", roles:["cur"],
+  intro:"Curators organise an exhibition like chapters of a book. Pick a structure, plan your rooms, and write the introduction panel visitors read first.",
+  lens:{cur:"This is the heart of curating. Each room should answer one smaller question that builds toward your big one.",
+        mkt:"The strongest room is often your marketing hook. Which section would make the best Instagram post?",
+        des:"Each section may get its own colour or graphic marker, so visitors always know where they are."},
+  fields:[
+   {k:"arc",t:"chips",req:1,owner:"cur",label:"How is the story organised?",opts:["Chronological (over time)","Thematic (by idea)","A journey (beginning → end)","Compare & contrast"]},
+   {k:"rooms",t:"list",req:3,owner:"cur",label:"Sections / rooms",hint:"Plan at least 3. Give each a name and one sentence about its idea.",
+    cols:[{k:"name",label:"Section name",ph:"e.g. Uniforms"},{k:"idea",label:"What this room explores",ph:"e.g. When clothes make everyone the same",wide:1}],
+    prefix:"Gallery"},
+   {k:"intro",t:"area",label:"Introduction wall text",owner:"cur",hint:"The first panel visitors read. Real museums aim for about 100 words.",words:1,big:1}
+  ]},
+ {id:"objects", name:"Choose the works", roles:["cur"],
+  intro:"Pick the artworks, objects or media that tell your story. They can be real works held by real museums, since this is a fictional show.",
+  lens:{cur:"Every object needs a reason to be there. If you can't say why in one sentence, it probably belongs in another show.",
+        mkt:"Is there one “star object” people would travel to see? That's what goes on the poster and in the press release.",
+        des:"Think about scale and variety: big and small, flat and 3D, image and sound. A good mix keeps the room alive."},
+  fields:[
+   {k:"objects",t:"list",req:5,owner:"cur",label:"Object list",hint:"Add at least 5. Catalogue numbers fill in automatically.",
+    cols:[{k:"title",label:"Title",ph:"e.g. The Great Wave"},{k:"maker",label:"Artist / maker",ph:"e.g. Hokusai"},{k:"date",label:"Date",ph:"c. 1831"},{k:"medium",label:"Medium",ph:"Woodblock print"},{k:"room",label:"Section",sel:"rooms"},{k:"why",label:"Why it's in the show",ph:"One sentence",wide:1}],
+    prefix:"Cat. no."},
+   {k:"star",t:"text",label:"Your star object",owner:"mkt",ph:"Which object would sell tickets?"},
+   {k:"lenders",t:"area",label:"Where would you borrow works from?",owner:"cur",ph:"e.g. Ateneum (Helsinki), V&A (London), a local collector"}
+  ]},
+ {id:"space", name:"Space & visitor journey", roles:["cur","des"],
+  intro:"Imagine walking through your show. How do people move, what do they see first, and how does everyone feel welcome?",
+  lens:{cur:"Curators plan pacing: a strong opening, quieter moments to rest, and a memorable ending.",
+        mkt:"Visitor experience drives reviews. Where will people take photos? Where do they sit, chat or buy something?",
+        des:"Wayfinding is design work: arrows, room numbers, label heights and lighting all guide the eye."},
+  fields:[
+   {k:"route",t:"chips",req:1,owner:"cur",label:"Visitor route",opts:["One-way route","Free-flow (explore any order)","Central hub with side rooms"]},
+   {k:"entrance",t:"area",label:"The entrance moment",req:1,owner:"des",hint:"What is the very first thing a visitor sees and hears?"},
+   {k:"interactive",t:"area",label:"One hands-on or interactive element",owner:"cur",ph:"e.g. A mirror booth where visitors photograph their own outfit"},
+   {k:"access",t:"chips",multi:1,label:"Accessibility features",opts:["Seating throughout","Large-print labels","Audio guide","Step-free route","Quiet hour","Translated labels","Braille / tactile objects"]}
+  ]},
+ {id:"identity", name:"Visual identity", roles:["des"],
+  intro:"Now you're the graphic designer. Choose the colours, type and poster idea that make your exhibition recognisable everywhere.",
+  lens:{cur:"Check that the look fits the content. A playful font might not suit a serious history show.",
+        mkt:"Consistency builds recognition: the same colours and type on posters, tickets, Instagram and the gallery wall.",
+        des:"Designers start with a mood, limit the palette to 2–3 colours, and pick one typeface with character."},
+  fields:[
+   {k:"mood",t:"chips",multi:1,label:"Mood words",owner:"des",opts:["Bold","Calm","Playful","Mysterious","Elegant","Raw","Futuristic","Nostalgic","Warm"]},
+   {k:"palette",t:"palette",req:1,owner:"des",label:"Colour palette",hint:"Pick a background, a main colour and an accent. The poster preview updates live."},
+   {k:"typeStyle",t:"chips",req:1,owner:"des",label:"Typography style",opts:["Classic serif","Clean sans-serif","Handmade / handwritten","Bold display"]},
+   {k:"poster",t:"area",req:1,owner:"des",label:"Poster concept",hint:"Describe the main image, where the title sits and what makes it eye-catching."},
+   {k:"signage",t:"area",label:"Signage & labels idea",owner:"des",ph:"e.g. Each section has its own colour stripe on the floor"}
+  ]},
+ {id:"marketing", name:"Marketing & launch", roles:["mkt"],
+  intro:"Now you're the marketing specialist. How will people hear about the show, and why will they come?",
+  lens:{cur:"Curators often give press interviews. What's the one story about this show you'd tell a journalist?",
+        mkt:"Marketers plan a campaign: a tagline, the right channels for the audience, an opening event and a way to measure success.",
+        des:"Every channel needs its own format: a square Instagram post, a vertical story, an A3 poster."},
+  fields:[
+   {k:"tagline",t:"text",req:1,owner:"mkt",label:"Tagline",ph:"e.g. What are you really wearing?"},
+   {k:"channels",t:"chips",multi:1,req:2,owner:"mkt",label:"Channels (choose at least 2)",opts:["Instagram","TikTok","School newsletter","Posters around town","Local press / radio","Partner organisations","Email newsletter","Influencer collab"]},
+   {k:"campaign",t:"area",label:"Campaign idea",owner:"mkt",ph:"e.g. A countdown of 10 objects in 10 days on TikTok"},
+   {k:"launch",t:"area",label:"Opening event",owner:"mkt",ph:"e.g. Late-night opening with a student DJ and a clothes swap"},
+   {k:"ticket",t:"chips",label:"Ticket model",opts:["Free","Pay what you can","Paid ticket","Free for under-18s"]},
+   {k:"goal",t:"text",label:"How will you measure success?",owner:"mkt",ph:"e.g. 5,000 visitors and 200 new newsletter sign-ups"}
+  ]},
+ {id:"logistics", name:"Timeline & budget", roles:["cur","mkt","des"],
+  intro:"Real exhibitions are planned 1–3 years ahead. Map the key milestones and a simple budget.",
+  lens:{cur:"Loans, shipping and insurance take months. Curators set the deadlines that everyone else works back from.",
+        mkt:"The campaign usually starts 6–8 weeks before opening. Put it in the timeline.",
+        des:"Printers need final files weeks before opening. Designers always add a proofing deadline."},
+  fields:[
+   {k:"milestones",t:"list",req:3,label:"Milestones",hint:"Add at least 3, from first research to opening day.",
+    cols:[{k:"when",label:"When",ph:"e.g. Sept 2026"},{k:"what",label:"What happens",ph:"e.g. Loan requests sent",wide:1},{k:"who",label:"Who leads",sel:"roles"}],prefix:"Step"},
+   {k:"currency",t:"text",label:"Currency",ph:"€",small:1},
+   {k:"budget",t:"list",label:"Budget lines",cols:[{k:"item",label:"Item",ph:"e.g. Printing posters"},{k:"amount",label:"Amount",ph:"0",num:1}],prefix:"Line"},
+   {k:"risks",t:"area",label:"What could go wrong, and your plan B",ph:"e.g. A key loan is refused → use a high-quality reproduction with a label explaining why"}
+  ]},
+ {id:"reflect", name:"Final plan & reflection", roles:["cur","mkt","des"],
+  intro:"Pull it all together. Write your pitch, then reflect on which role felt most like you.",
+  lens:{cur:"Curators pitch exhibition ideas to museum directors. Clear, passionate and specific wins.",
+        mkt:"An elevator pitch is a marketing tool: 30 seconds, one hook, one reason to care.",
+        des:"Look back at your poster idea. Would you still choose it now that the whole plan exists?"},
+  fields:[
+   {k:"pitch",t:"area",req:1,label:"30-second pitch",hint:"Imagine you're in a lift with a museum director. Why should they host your show?",words:1},
+   {k:"reflection",t:"area",req:1,label:"Which role felt most like you, and why?",hint:"Your career compass below shows how you rated each stage."},
+   {k:"surprise",t:"area",label:"What surprised you about how exhibitions are made?"},
+   {k:"next",t:"area",label:"One next step to explore this career",ph:"e.g. Visit the Ateneum and ask about their internship; try a summer course in graphic design"}
+  ]}
+];
+
+/* ---------- state ---------- */
+const blank = ()=>({f:{}, stages:{}, current:"theme", log:[], updatedAt:0});
+let S = blank();
+let db=null, docRef=null, synced=false, pending=null, writing=false, lastWritten="", remoteQueued=null;
+const LS="exhibition-studio-v1";
+try{ const raw=localStorage.getItem(LS); if(raw){ S=Object.assign(blank(),JSON.parse(raw)); } }catch(e){}
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const stg=id=>STAGES.find(s=>s.id===id);
+const st=id=>(S.stages[id]=S.stages[id]||{done:false,enjoyed:null,mentor:""});
+const val=k=>S.f[k];
+const filled=v=>Array.isArray(v)?v.length>0:(v&&typeof v==="object")?Object.keys(v).length>0:!!(v&&String(v).trim());
+const listRows=k=>(S.f[k]||[]).filter(r=>Object.values(r).some(x=>String(x||"").trim()));
+
+function fieldOk(fd){
+  if(!fd.req) return true;
+  const v=S.f[fd.k];
+  if(fd.t==="list") return listRows(fd.k).length>=fd.req;
+  if(fd.t==="chips"&&fd.multi) return (v||[]).length>=(fd.req||1);
+  if(fd.t==="palette") return v&&v.bg&&v.main&&v.accent;
+  return filled(v);
+}
+const missingOf=s=>s.fields.filter(fd=>!fieldOk(fd));
+const startedOf=s=>s.fields.some(fd=>fd.t==="list"?listRows(fd.k).length:filled(S.f[fd.k]));
+function stageStatus(s){ if(st(s.id).done) return "done"; return startedOf(s)?"started":"todo"; }
+
+/* ---------- saving ---------- */
+function save(msg){
+  S.updatedAt=Date.now();
+  try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){}
+  if(msg) toast(msg);
+  if(!docRef) return;
+  clearTimeout(pending); pending=setTimeout(flush,900);
+}
+async function flush(){
+  if(!docRef) return;
+  if(writing){ clearTimeout(pending); pending=setTimeout(flush,500); return; }
+  const json=JSON.stringify(S); if(json===lastWritten) return;
+  writing=true;
+  try{ await docRef.set({state:json, updatedAt:S.updatedAt}); lastWritten=json; setSync(true); }
+  catch(e){ setSync(false, e&&e.code==="permission_denied"?"View only, changes not shared":"Saved on this device"); }
+  finally{ writing=false; }
+}
+function setSync(on,txt){ const el=$("#sync"); el.classList.toggle("on",!!on); el.textContent=txt||(on?"Saved & shared":"Saved on this device"); }
+function applyRemote(data){
+  if(!data||!data.state) return;
+  if(data.state===lastWritten) return;
+  if((data.updatedAt||0)<=S.updatedAt && JSON.stringify(S)!==data.state && S.updatedAt) { return; }
+  const a=document.activeElement;
+  if(a && a.matches && a.matches("input,textarea,select") && $("#work").contains(a)){ remoteQueued=data; return; }
+  try{ const cur=S.current; S=Object.assign(blank(),JSON.parse(data.state)); S.current=S.current||cur; lastWritten=data.state;
+       try{localStorage.setItem(LS,data.state);}catch(e){}
+       renderAll(); }catch(e){}
+}
+document.addEventListener("focusout",()=>{ setTimeout(()=>{ if(remoteQueued && !(document.activeElement&&document.activeElement.matches("input,textarea,select"))){ const d=remoteQueued; remoteQueued=null; applyRemote(d);} },50); });
+
+/* ---------- toast ---------- */
+let tt; function toast(m){ const t=$("#toast"); t.textContent=m; t.hidden=false; clearTimeout(tt); tt=setTimeout(()=>t.hidden=true,2200); }
+
+/* ---------- rail ---------- */
+function renderRail(){
+  $("#rail").innerHTML=STAGES.map((s,i)=>{
+    const status=stageStatus(s);
+    return `<button data-go="${s.id}" ${S.current===s.id?'aria-current="step"':''} title="${esc(s.name)}">
+      <span class="n">${String(i+1).padStart(2,"0")}</span><span class="t">${esc(s.name)}</span><span class="dot ${status}" aria-label="${status==="done"?"complete":status==="started"?"in progress":"not started"}"></span>
+      <span class="roles">${s.roles.map(r=>`<span class="rtag ${r}">${r==="cur"?"Curator":r==="mkt"?"Marketing":"Design"}</span>`).join("")}</span></button>`;
+  }).join("");
+}
+
+/* ---------- work area ---------- */
+function ownerTag(o){ return o?`<span class="owner rtag ${o}">${ROLES[o].name}</span>`:""; }
+function fieldHTML(fd){
+  const v=S.f[fd.k]; const id="f_"+fd.k;
+  const reqTag=fd.req?`<span class="req">Required${fd.t==="list"&&fd.req>1?` · min ${fd.req}`:fd.multi&&fd.req>1?` · min ${fd.req}`:""}</span>`:"";
+  const hint=fd.hint?`<p class="hint">${esc(fd.hint)}</p>`:"";
+  if(fd.t==="text") return `<div class="field"><label for="${id}">${esc(fd.label)} ${ownerTag(fd.owner)} ${reqTag}</label>${hint}<input type="text" id="${id}" data-f="${fd.k}" value="${esc(v||"")}" placeholder="${esc(fd.ph||"")}" ${fd.small?'style="max-width:120px"':""}></div>`;
+  if(fd.t==="area") return `<div class="field"><label for="${id}">${esc(fd.label)} ${ownerTag(fd.owner)} ${reqTag}</label>${hint}<textarea id="${id}" data-f="${fd.k}" placeholder="${esc(fd.ph||"")}" ${fd.big?'style="min-height:150px"':""}>${esc(v||"")}</textarea>${fd.words?`<span class="count" data-wc="${fd.k}">${wc(v)} words</span>`:""}</div>`;
+  if(fd.t==="chips"){ const sel=fd.multi?(v||[]):[v];
+    return `<div class="field"><span class="lbl" id="${id}">${esc(fd.label)} ${ownerTag(fd.owner)} ${reqTag}</span>${hint}<div class="chips" role="group" aria-labelledby="${id}">${fd.opts.map(o=>`<button type="button" class="chip" data-chip="${fd.k}" data-multi="${fd.multi?1:0}" data-v="${esc(o)}" aria-pressed="${sel.includes(o)}">${esc(o)}</button>`).join("")}</div></div>`; }
+  if(fd.t==="palette"){ const p=v||{};
+    const sw=(k,l,d)=>`<label>${l}<input type="color" id="${id}_${k}" data-pal="${k}" value="${p[k]||d}"></label>`;
+    return `<div class="field"><span class="lbl">${esc(fd.label)} ${ownerTag(fd.owner)} ${reqTag}</span>${hint}
+      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start"><div class="swatches">${sw("bg","Background","#f2ece0")}${sw("main","Main","#1d2a5a")}${sw("accent","Accent","#e0472f")}</div>
+      <div id="posterBox">${posterHTML()}</div></div>${!v?`<p class="hint">Touch any swatch to choose your colours.</p>`:""}</div>`; }
+  if(fd.t==="list"){ const rows=S.f[fd.k]||[];
+    return `<div class="field"><span class="lbl">${esc(fd.label)} ${ownerTag(fd.owner)} ${reqTag}</span>${hint}<div class="list">${rows.map((r,i)=>rowHTML(fd,r,i)).join("")}</div><button type="button" class="add" data-add="${fd.k}">+ Add ${fd.prefix==="Cat. no."?"object":fd.prefix==="Gallery"?"section":fd.prefix==="Step"?"milestone":"line"}</button>${fd.k==="budget"?`<p class="hint" id="budgetTotal">Total: ${budgetTotal()}</p>`:""}</div>`; }
+  return "";
+}
+function rowHTML(fd,r,i){
+  return `<div class="row"><div class="cat"><span>${fd.prefix} ${fd.prefix==="Cat. no."?String(i+1).padStart(3,"0"):i+1}</span><button type="button" class="x" data-del="${fd.k}" data-i="${i}" aria-label="Remove">Remove</button></div>
+  ${fd.cols.map(c=>{ const id=`l_${fd.k}_${i}_${c.k}`; const v=r[c.k]||"";
+    let input;
+    if(c.sel){ const opts=c.sel==="rooms"?listRows("rooms").map((x,j)=>x.name||("Gallery "+(j+1))):Object.values(ROLES).map(x=>x.name);
+      input=`<select id="${id}" data-l="${fd.k}" data-i="${i}" data-c="${c.k}"><option value="">—</option>${opts.map(o=>`<option ${o===v?"selected":""}>${esc(o)}</option>`).join("")}</select>`; }
+    else input=`<input type="${c.num?"number":"text"}" ${c.num?'inputmode="decimal" min="0"':""} id="${id}" data-l="${fd.k}" data-i="${i}" data-c="${c.k}" value="${esc(v)}" placeholder="${esc(c.ph||"")}">`;
+    return `<div class="field ${c.wide?"wide":""}" style="gap:3px"><label for="${id}" style="font-weight:500;font-size:12.5px;color:var(--muted)">${esc(c.label)}</label>${input}</div>`;
+  }).join("")}</div>`;
+}
+const wc=v=>(String(v||"").trim().match(/\S+/g)||[]).length;
+function budgetTotal(){ const c=(S.f.currency||"€").trim()||"€"; const t=listRows("budget").reduce((a,r)=>a+(parseFloat(r.amount)||0),0); return c+" "+t.toLocaleString(undefined,{maximumFractionDigits:2}); }
+function posterHTML(small){
+  const p=S.f.palette||{bg:"#f2ece0",main:"#1d2a5a",accent:"#e0472f"};
+  const ts=S.f.typeStyle||"";
+  const ff=ts.startsWith("Classic")?'"Instrument Serif",Georgia,serif':ts.startsWith("Hand")?'"Segoe Print","Bradley Hand","Comic Sans MS",cursive':ts.startsWith("Bold")?'Impact,"Arial Black",sans-serif':'"IBM Plex Sans",system-ui,sans-serif';
+  return `<div class="poster" style="background:${p.bg};color:${p.main};${small?"padding:10px":""}" aria-label="Poster preview">
+    <div class="p-sub" style="color:${p.accent}">${esc(S.f.venueName||"Exhibition")}</div>
+    <div><div style="width:42px;height:6px;background:${p.accent};margin-bottom:10px"></div><div class="p-title" style="font-family:${ff};${small?"font-size:15px":""}">${esc(S.f.title||"Your title")}</div>
+    <div style="font-size:12px;margin-top:8px;opacity:.85">${esc(S.f.tagline||S.f.subtitle||"")}</div></div>
+    <div class="p-sub">${esc(S.f.dates||"Dates")}</div></div>`;
+}
+
+function renderWork(){
+  const s=stg(S.current)||STAGES[0]; const i=STAGES.indexOf(s); const ss=st(s.id); const miss=missingOf(s);
+  $("#work").innerHTML=`
+  <div class="stage-head"><span class="mono">Stage ${i+1} of ${STAGES.length}${ss.done?" · Complete":""}</span><h2>${esc(s.name)}</h2><p>${esc(s.intro)}</p></div>
+  <section class="lenses" aria-label="Three professional perspectives">
+    ${["cur","mkt","des"].map(r=>`<div class="lens ${r}"><div class="who"><span class="mono">${ROLES[r].name}${s.roles.includes(r)?" · leads":""}</span></div>
+      <p>${esc(s.lens[r])}</p><span class="job">${esc(ROLES[r].job)}</span>
+      <button type="button" class="ask" data-ask="${r}" hidden>Ask the ${ROLES[r].name.toLowerCase()} for feedback</button>
+      <div class="answer" data-ans="${r}" hidden></div></div>`).join("")}
+  </section>
+  <section class="card">
+    ${s.fields.map(fieldHTML).join("")}
+    ${ss.done?"":""}
+    <div class="enjoy"><span class="lbl" style="font-weight:600;font-size:14px">Career compass: which role did you enjoy most in this stage?</span>
+      <div class="chips">${["cur","mkt","des"].map(r=>`<button type="button" class="chip ${r}" data-enjoy="${r}" aria-pressed="${ss.enjoyed===r}">${ROLES[r].name}</button>`).join("")}</div></div>
+    <div class="stage-foot">
+      <span class="missing" id="missTxt">${miss.length?`Still needed: ${miss.map(m=>esc(m.label)).join(", ")}`:ss.done?"Stage complete. You can still edit it.":"Everything required is filled in."}</span>
+      <div class="copyrow">
+        ${i>0?`<button type="button" class="btn ghost" data-go="${STAGES[i-1].id}">Back</button>`:""}
+        ${ss.done?`<button type="button" class="btn ghost" id="reopen">Reopen stage</button>`:`<button type="button" class="btn" id="complete" ${miss.length?"disabled":""}>Mark stage complete</button>`}
+        ${i<STAGES.length-1?`<button type="button" class="btn ghost" data-go="${STAGES[i+1].id}">Next stage</button>`:""}
+      </div>
+    </div>
+    <details class="mentor"><summary>Mentor notes for this stage</summary><textarea id="mentor_${s.id}" data-mentor="${s.id}" placeholder="Feedback, questions or next steps from your mentor">${esc(ss.mentor||"")}</textarea></details>
+  </section>`;
+  if(sample) $("#work").querySelectorAll("[data-ask]").forEach(b=>b.hidden=false);
+}
+
+/* ---------- plan sheet ---------- */
+function kv(label,v){ const e=!filled(v); const t=Array.isArray(v)?v.join(", "):v; return `<dt>${esc(label)}</dt><dd class="${e?"empty":""}">${e?"Not decided yet":esc(t)}</dd>`; }
+function tally(){ const t={cur:0,mkt:0,des:0}; Object.values(S.stages).forEach(x=>{ if(x&&x.enjoyed) t[x.enjoyed]++; }); return t; }
+function summary(){
+  const done=STAGES.filter(s=>st(s.id).done);
+  const cur=STAGES.find(s=>!st(s.id).done);
+  const decisions=[];
+  if(S.f.title) decisions.push(`Title: “${S.f.title}”${S.f.subtitle?" — "+S.f.subtitle:""}`);
+  if(S.f.theme) decisions.push(`Theme: ${S.f.theme}`);
+  if((S.f.audience||[]).length) decisions.push(`For: ${S.f.audience.join(", ")}`);
+  if(S.f.venue) decisions.push(`Venue: ${S.f.venue}${S.f.venueName?" ("+S.f.venueName+")":""}`);
+  if(S.f.arc) decisions.push(`Story structure: ${S.f.arc}, ${listRows("rooms").length} section(s)`);
+  if(listRows("objects").length) decisions.push(`${listRows("objects").length} object(s) selected${S.f.star?", star object: "+S.f.star:""}`);
+  if(S.f.route) decisions.push(`Route: ${S.f.route}`);
+  if(S.f.typeStyle) decisions.push(`Look: ${S.f.typeStyle}${(S.f.mood||[]).length?", "+S.f.mood.join(", ").toLowerCase():""}`);
+  if(S.f.tagline) decisions.push(`Tagline: “${S.f.tagline}”`);
+  if((S.f.channels||[]).length) decisions.push(`Promoted via ${S.f.channels.join(", ")}`);
+  if(listRows("budget").length) decisions.push(`Budget total: ${budgetTotal()}`);
+  const open=STAGES.filter(s=>!st(s.id).done&&startedOf(s)).flatMap(s=>missingOf(s).map(m=>`${s.name}: ${m.label}`));
+  const last=S.updatedAt?new Date(S.updatedAt).toLocaleString(undefined,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"not started";
+  return {done,cur,decisions,open,last};
+}
+function renderSheet(){
+  const sm=summary(); const f=S.f; const t=tally(); const max=Math.max(1,t.cur,t.mkt,t.des);
+  const lead=Object.entries(t).sort((a,b)=>b[1]-a[1]); const leadTxt=lead[0][1]?`${ROLES[lead[0][0]].name}${lead[1][1]===lead[0][1]?" and "+ROLES[lead[1][0]].name+" (tied)":""}`:"No ratings yet";
+  const sec=(s,body)=>{ const status=stageStatus(s); return `<section class="sec"><div class="sec-h"><span class="mono">${String(STAGES.indexOf(s)+1).padStart(2,"0")} · ${esc(s.name)}</span><span class="badge ${status==="done"?"done":status==="started"?"prog":""}">${status==="done"?"Complete":status==="started"?"In progress":"Not started"}</span></div>${body}</section>`; };
+  const rooms=listRows("rooms"), objs=listRows("objects"), ms=listRows("milestones"), bud=listRows("budget");
+  $("#sheet").innerHTML=`
+  <div class="sheet-head"><span class="mono" style="color:var(--muted)">Exhibition plan · auto-filled</span><h3>${esc(f.title||"Untitled exhibition")}</h3>${f.subtitle?`<span class="sub">${esc(f.subtitle)}</span>`:""}</div>
+  <div class="status" aria-live="polite">
+    <div><strong>Where she is:</strong> ${sm.done.length===STAGES.length?"All stages complete. The plan is ready to present.":sm.cur?`Stage ${STAGES.indexOf(sm.cur)+1}, ${esc(sm.cur.name)}. ${sm.done.length} of ${STAGES.length} stages complete.`:""}</div>
+    <div><strong>Last updated:</strong> ${esc(sm.last)}</div>
+    ${sm.decisions.length?`<div><strong>Decided so far:</strong><ul>${sm.decisions.map(d=>`<li>${esc(d)}</li>`).join("")}</ul></div>`:`<div>No decisions yet. Start with Stage 1 to find a theme.</div>`}
+    ${sm.open.length?`<div><strong>Open items:</strong><ul>${sm.open.slice(0,6).map(d=>`<li>${esc(d)}</li>`).join("")}</ul></div>`:""}
+  </div>
+  <section class="sec"><div class="sec-h"><span class="mono">Career compass</span><span class="badge">${esc(leadTxt)}</span></div>
+    <div class="meter">${["cur","mkt","des"].map(r=>`<div class="meter-row"><span>${ROLES[r].name}</span><span class="track"><i style="width:${t[r]/max*100}%;background:var(--${r})"></i></span><span class="num">${t[r]}</span></div>`).join("")}</div></section>
+  ${sec(STAGES[0],`<dl class="kv">${kv("Question",f.question)}${kv("Theme",f.theme)}${kv("Title",f.title)}</dl>`)}
+  ${sec(STAGES[1],`<dl class="kv">${kv("Audience",f.audience)}${kv("Visitor",f.audienceNote)}${kv("Takeaway",f.takeaway)}${kv("Venue",[f.venue,f.venueName].filter(Boolean).join(" · "))}${kv("Dates",f.dates)}</dl>`)}
+  ${sec(STAGES[2],`<dl class="kv">${kv("Structure",f.arc)}</dl>${rooms.length?`<table class="mini"><tr><th>Section</th><th>Idea</th></tr>${rooms.map((r,i)=>`<tr><td>${esc(r.name||"Gallery "+(i+1))}</td><td>${esc(r.idea)}</td></tr>`).join("")}</table>`:""}${f.intro?`<dl class="kv">${kv("Intro text",f.intro)}</dl>`:""}`)}
+  ${sec(STAGES[3],`${objs.length?`<div style="overflow-x:auto"><table class="mini"><tr><th>No.</th><th>Work</th><th>Section</th></tr>${objs.map((o,i)=>`<tr><td class="num">${String(i+1).padStart(3,"0")}</td><td>${esc(o.title)}${o.maker?`, <i>${esc(o.maker)}</i>`:""}${o.date?` (${esc(o.date)})`:""}${o.why?`<br><span style="color:var(--muted)">${esc(o.why)}</span>`:""}</td><td>${esc(o.room)}</td></tr>`).join("")}</table></div>`:""}<dl class="kv">${kv("Star object",f.star)}${kv("Lenders",f.lenders)}</dl>`)}
+  ${sec(STAGES[4],`<dl class="kv">${kv("Route",f.route)}${kv("Entrance",f.entrance)}${kv("Interactive",f.interactive)}${kv("Access",f.access)}</dl>`)}
+  ${sec(STAGES[5],`<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start"><div style="width:120px">${f.palette?posterHTML(true):""}</div><dl class="kv" style="flex:1;min-width:180px">${kv("Mood",f.mood)}${kv("Type",f.typeStyle)}${kv("Poster",f.poster)}${kv("Signage",f.signage)}</dl></div>`)}
+  ${sec(STAGES[6],`<dl class="kv">${kv("Tagline",f.tagline)}${kv("Channels",f.channels)}${kv("Campaign",f.campaign)}${kv("Opening",f.launch)}${kv("Tickets",f.ticket)}${kv("Success",f.goal)}</dl>`)}
+  ${sec(STAGES[7],`${ms.length?`<table class="mini"><tr><th>When</th><th>Milestone</th><th>Lead</th></tr>${ms.map(m=>`<tr><td>${esc(m.when)}</td><td>${esc(m.what)}</td><td>${esc(m.who)}</td></tr>`).join("")}</table>`:""}${bud.length?`<table class="mini"><tr><th>Budget line</th><th class="num">Amount</th></tr>${bud.map(b=>`<tr><td>${esc(b.item)}</td><td class="num">${esc(b.amount)}</td></tr>`).join("")}<tr><td><b>Total</b></td><td class="num"><b>${esc(budgetTotal())}</b></td></tr></table>`:""}<dl class="kv">${kv("Plan B",f.risks)}</dl>`)}
+  ${sec(STAGES[8],`<dl class="kv">${kv("Pitch",f.pitch)}${kv("Reflection",f.reflection)}${kv("Surprise",f.surprise)}${kv("Next step",f.next)}</dl>`)}
+  ${S.log.length?`<section class="sec"><div class="sec-h"><span class="mono">Progress log</span></div><table class="mini">${S.log.slice(-8).reverse().map(l=>`<tr><td style="white-space:nowrap;color:var(--muted)">${esc(new Date(l.t).toLocaleDateString(undefined,{day:"numeric",month:"short"}))}</td><td>${esc(l.m)}</td></tr>`).join("")}</table></section>`:""}
+  <section class="sec">
+    <div class="copyrow"><button type="button" class="btn ghost" id="copyPlan">Copy plan as text</button><button type="button" class="btn ghost" id="resetBtn">Start over</button></div>
+    <div id="resetBox" hidden class="reset-confirm"><span>Erase the whole plan for everyone?</span><button type="button" class="btn" id="resetYes" style="background:#b42318;color:#fff">Erase</button><button type="button" class="btn ghost" id="resetNo">Keep it</button></div>
+  </section>`;
+}
+
+function renderTop(){
+  const n=STAGES.filter(s=>st(s.id).done).length;
+  $("#progTxt").textContent=`${n} of ${STAGES.length} stages complete`;
+  $("#progFill").style.width=(n/STAGES.length*100)+"%"; $("#progBar").setAttribute("aria-valuenow",Math.round(n/STAGES.length*100));
+  $("#hTitle").innerHTML=S.f.title?esc(S.f.title):`Your exhibition, <em>untitled</em>`;
+}
+function renderAll(){ renderTop(); renderRail(); renderWork(); renderSheet(); }
+function softRender(){ renderTop(); renderRail(); renderSheet();
+  const s=stg(S.current); const miss=missingOf(s); const ss=st(s.id);
+  const m=$("#missTxt"); if(m) m.textContent=miss.length?`Still needed: ${miss.map(x=>x.label).join(", ")}`:ss.done?"Stage complete. You can still edit it.":"Everything required is filled in.";
+  const c=$("#complete"); if(c) c.disabled=!!miss.length;
+  const pb=$("#posterBox"); if(pb) pb.innerHTML=posterHTML();
+  const bt=$("#budgetTotal"); if(bt) bt.textContent="Total: "+budgetTotal();
+}
+
+/* ---------- events ---------- */
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.dataset.f){ S.f[el.dataset.f]=el.value; const w=document.querySelector(`[data-wc="${el.dataset.f}"]`); if(w) w.textContent=wc(el.value)+" words"; }
+  else if(el.dataset.l){ const k=el.dataset.l,i=+el.dataset.i; S.f[k]=S.f[k]||[]; S.f[k][i]=Object.assign({},S.f[k][i],{[el.dataset.c]:el.value}); }
+  else if(el.dataset.pal){ const p=Object.assign({bg:"#f2ece0",main:"#1d2a5a",accent:"#e0472f"},S.f.palette); p[el.dataset.pal]=el.value; S.f.palette=p; }
+  else if(el.dataset.mentor){ st(el.dataset.mentor).mentor=el.value; }
+  else return;
+  save(); softRender();
+});
+document.addEventListener("change",e=>{ if(e.target.matches("select[data-l]")){ /* handled by input */ } });
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  if(b.dataset.go){ S.current=b.dataset.go; save(); renderAll(); setView("work"); window.scrollTo({top:0,behavior:"smooth"}); return; }
+  if(b.dataset.chip){ const k=b.dataset.chip,v=b.dataset.v;
+    if(b.dataset.multi==="1"){ const a=new Set(S.f[k]||[]); a.has(v)?a.delete(v):a.add(v); S.f[k]=[...a]; b.setAttribute("aria-pressed",a.has(v)); }
+    else { S.f[k]=S.f[k]===v?"":v; b.parentElement.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.v===S.f[k])); }
+    save(); softRender(); return; }
+  if(b.dataset.add){ const k=b.dataset.add; S.f[k]=(S.f[k]||[]).concat([{}]); save(); renderWork(); softRender();
+    const rows=$("#work").querySelectorAll(`[data-l="${k}"]`); const last=[...rows].filter(x=>+x.dataset.i===S.f[k].length-1)[0]; if(last) last.focus(); return; }
+  if(b.dataset.del){ const k=b.dataset.del; S.f[k].splice(+b.dataset.i,1); save(); renderWork(); softRender(); return; }
+  if(b.dataset.enjoy){ const ss=st(S.current); ss.enjoyed=ss.enjoyed===b.dataset.enjoy?null:b.dataset.enjoy;
+    b.parentElement.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.enjoy===ss.enjoyed)); save(); softRender(); return; }
+  if(b.id==="complete"){ const s=stg(S.current); st(s.id).done=true; S.log.push({t:Date.now(),m:`Completed “${s.name}”${st(s.id).enjoyed?" · enjoyed the "+ROLES[st(s.id).enjoyed].name.toLowerCase()+" role":""}`});
+    const i=STAGES.indexOf(s); const nxt=STAGES.slice(i+1).find(x=>!st(x.id).done); if(nxt) S.current=nxt.id;
+    save(`Stage complete: ${s.name}`); renderAll(); window.scrollTo({top:0,behavior:"smooth"}); return; }
+  if(b.id==="reopen"){ const s=stg(S.current); st(s.id).done=false; S.log.push({t:Date.now(),m:`Reopened “${s.name}”`}); save(); renderAll(); return; }
+  if(b.dataset.ask){ askRole(b.dataset.ask,b); return; }
+  if(b.id==="copyPlan"){ copyPlan(); return; }
+  if(b.id==="resetBtn"){ $("#resetBox").hidden=false; return; }
+  if(b.id==="resetNo"){ $("#resetBox").hidden=true; return; }
+  if(b.id==="resetYes"){ S=blank(); save("Plan erased"); renderAll(); return; }
+  if(b.id==="tabWork"){ setView("work"); return; }
+  if(b.id==="tabSheet"){ setView("sheet"); return; }
+});
+function setView(v){ document.body.dataset.view=v; $("#tabWork").setAttribute("aria-selected",v==="work"); $("#tabSheet").setAttribute("aria-selected",v==="sheet"); }
+setView("work");
+
+function planText(){
+  const f=S.f, sm=summary(), lines=[];
+  lines.push((f.title||"Untitled exhibition").toUpperCase()); if(f.subtitle) lines.push(f.subtitle); lines.push("");
+  lines.push("STATUS: "+(sm.cur?`Stage ${STAGES.indexOf(sm.cur)+1} – ${sm.cur.name} (${sm.done.length}/${STAGES.length} complete)`:"All stages complete"));
+  lines.push("Decided so far:"); sm.decisions.forEach(d=>lines.push(" • "+d)); lines.push("");
+  STAGES.forEach((s,i)=>{ lines.push(`${i+1}. ${s.name.toUpperCase()}`);
+    s.fields.forEach(fd=>{ const v=f[fd.k];
+      if(fd.t==="list"){ listRows(fd.k).forEach((r,j)=>lines.push(`   ${fd.prefix} ${j+1}: `+fd.cols.map(c=>r[c.k]).filter(Boolean).join(" | "))); }
+      else if(fd.t==="palette"){ if(v) lines.push(`   ${fd.label}: ${v.bg}, ${v.main}, ${v.accent}`); }
+      else if(filled(v)) lines.push(`   ${fd.label}: ${Array.isArray(v)?v.join(", "):v}`); });
+    lines.push(""); });
+  return lines.join("\n");
+}
+async function copyPlan(){ const txt=planText(); try{ await navigator.clipboard.writeText(txt); toast("Plan copied"); }
+  catch(e){ const ta=document.createElement("textarea"); ta.value=txt; ta.style.cssText="width:100%;min-height:200px;margin-top:8px"; $("#copyPlan").closest(".sec").appendChild(ta); ta.select(); toast("Select all and copy the text below"); } }
+
+/* ---------- ask a role (Claude) ---------- */
+let sample=null;
+async function askRole(r,btn){
+  if(!sample) return;
+  const s=stg(S.current); const out=$(`[data-ans="${r}"]`);
+  const ctx={}; s.fields.forEach(fd=>{ ctx[fd.label]=fd.t==="list"?listRows(fd.k):S.f[fd.k]||null; });
+  const prompt=`You are an experienced ${ROLES[r].name.toLowerCase()} in a museum (${ROLES[r].job}). You are mentoring a high-school student who is planning a FICTIONAL exhibition to explore careers in the art world.
+Exhibition so far: title "${S.f.title||"not chosen"}", theme "${S.f.theme||"not chosen"}", audience ${JSON.stringify(S.f.audience||[])}.
+Current stage: "${s.name}". Her answers for this stage (null = empty):
+${JSON.stringify(ctx,null,1)}
+
+Reply in under 130 words, plain text, no markdown headings. Speak directly to her as "you". Give: one specific thing that's working (or, if empty, a way to get started), then 2 short, concrete suggestions or questions from your professional point of view. Coach her thinking; don't write her answers for her. End with one sentence about what this part of the job is like day to day.`;
+  btn.disabled=true; out.hidden=false; out.textContent="Thinking…";
+  try{ const {text}=await sample(prompt,{modelTier:"quick",cache:false,onText:({text})=>{out.textContent=text;}}); out.textContent=text; }
+  catch(e){ if(e&&e.code==="not_granted"){ out.textContent="Feedback isn't available in this view."; } else if(e&&e.code==="rate_limited"){ out.textContent="Lots of questions at once. Wait a minute and try again."; } else out.textContent="Couldn't get feedback right now. Try again in a moment."; }
+  finally{ btn.disabled=false; }
+}
+
+/* ---------- boot ---------- */
+renderAll();
+(async()=>{
+  try{ if(window.claude&&claude.use){ sample=await claude.use("sample"); if(sample) $("#work").querySelectorAll("[data-ask]").forEach(b=>b.hidden=false); } }catch(e){}
+})();
+(async()=>{
+  try{
+    if(!(window.claude&&claude.use)) return;
+    db=await claude.use("db"); if(!db) return;
+    docRef=db.doc("plans/main");
+    let first=true;
+    docRef.onSnapshot(snap=>{
+      const d=snap.exists?snap.data():null;
+      if(first){ first=false; setSync(true);
+        if(!d||!d.state){ if(S.updatedAt){ flush(); } return; }
+        if(!S.updatedAt || (d.updatedAt||0)>=S.updatedAt){ S.updatedAt=0; applyRemote(d); } else flush();
+        return; }
+      if(d) applyRemote(d);
+    },()=>setSync(false));
+  }catch(e){}
+})();
+})();
+</script>
+
+</body>
+</html>
